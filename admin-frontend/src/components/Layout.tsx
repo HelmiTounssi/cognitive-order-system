@@ -22,14 +22,12 @@ import {
   Container
 } from '@mui/material';
 import {
+  Dashboard as DashboardIcon,
   Settings as SettingsIcon,
   Storage as StorageIcon,
   Psychology as PsychologyIcon,
   Rule as RuleIcon,
-  Api as ApiIcon,
-  Folder as ConfigurationIcon,
-  AutoAwesome as LLMIcon,
-  Chat as ChatIcon,
+  Build as ToolsIcon,
   Monitor as MonitorIcon
 } from '@mui/icons-material';
 import RuleEngineManager from './RuleEngineManager';
@@ -102,7 +100,7 @@ const Layout: React.FC = () => {
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Système de Gestion Cognitif - Interface d'Administration
+            🧠 Système de Gestion Cognitif - Interface d'Administration
           </Typography>
         </Toolbar>
       </AppBar>
@@ -117,55 +115,35 @@ const Layout: React.FC = () => {
               variant="scrollable"
               scrollButtons="auto"
             >
-              <Tab icon={<SettingsIcon />} label="Configuration" {...a11yProps(0)} />
-              <Tab icon={<StorageIcon />} label="Base de Connaissances" {...a11yProps(1)} />
-              <Tab icon={<PsychologyIcon />} label="Agent IA" {...a11yProps(2)} />
-              <Tab icon={<RuleIcon />} label="Moteur de Règles" {...a11yProps(3)} />
-              <Tab icon={<ApiIcon />} label="API & Outils" {...a11yProps(4)} />
-              <Tab icon={<ConfigurationIcon />} label="Configurations" {...a11yProps(5)} />
-              <Tab icon={<LLMIcon />} label="Assistants LLM" {...a11yProps(6)} />
-              <Tab icon={<ChatIcon />} label="RAG Chat" {...a11yProps(7)} />
-              <Tab icon={<MonitorIcon />} label="MCP" {...a11yProps(8)} />
+              <Tab icon={<DashboardIcon />} label="Dashboard" {...a11yProps(0)} />
+              <Tab icon={<SettingsIcon />} label="Configuration" {...a11yProps(1)} />
+              <Tab icon={<PsychologyIcon />} label="IA & RAG" {...a11yProps(2)} />
+              <Tab icon={<ToolsIcon />} label="Outils & MCP" {...a11yProps(3)} />
+              <Tab icon={<StorageIcon />} label="Base de Connaissances" {...a11yProps(4)} />
+              <Tab icon={<RuleIcon />} label="Moteur de Règles" {...a11yProps(5)} />
             </Tabs>
           </Box>
 
-          {/* Configuration Tab */}
+          {/* Dashboard Tab */}
           <TabPanel value={tabValue} index={0}>
             <SystemStatus />
           </TabPanel>
 
-          {/* Knowledge Base Tab */}
+          {/* Configuration Tab */}
           <TabPanel value={tabValue} index={1}>
-            <OntologyManager />
+            <ConfigurationManager />
           </TabPanel>
 
-          {/* AI Agent Tab */}
+          {/* IA & RAG Tab */}
           <TabPanel value={tabValue} index={2}>
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Agent IA - Statut
+                      🤖 Assistants LLM
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                      <CircularProgress size={20} />
-                      <Typography>Agent en cours d'exécution</Typography>
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" paragraph>
-                      L'agent traite actuellement les requêtes et effectue les inférences sémantiques.
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                      <Button variant="contained" color="success">
-                        Démarrer
-                      </Button>
-                      <Button variant="contained" color="error">
-                        Arrêter
-                      </Button>
-                      <Button variant="outlined">
-                        Redémarrer
-                      </Button>
-                    </Box>
+                    <LLMWorkflowGenerator />
                   </CardContent>
                 </Card>
               </Grid>
@@ -174,43 +152,34 @@ const Layout: React.FC = () => {
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Logs de l'Agent
+                      💬 Interface RAG Chat
                     </Typography>
-                    <Box sx={{ 
-                      bgcolor: 'grey.100', 
-                      p: 2, 
-                      borderRadius: 1, 
-                      maxHeight: 200, 
-                      overflow: 'auto',
-                      fontFamily: 'monospace',
-                      fontSize: '0.875rem'
-                    }}>
-                      <div>[2024-01-15 10:30:15] Agent démarré</div>
-                      <div>[2024-01-15 10:30:16] Base de connaissances chargée</div>
-                      <div>[2024-01-15 10:30:17] Vector store initialisé</div>
-                      <div>[2024-01-15 10:30:18] Interface LLM connectée</div>
-                      <div>[2024-01-15 10:30:19] Moteur de règles initialisé</div>
-                      <div>[2024-01-15 10:30:20] Prêt à traiter les requêtes</div>
-                    </Box>
+                    <RAGChatInterface />
                   </CardContent>
                 </Card>
               </Grid>
             </Grid>
           </TabPanel>
 
-          {/* Rule Engine Tab */}
+          {/* Outils & MCP Tab */}
           <TabPanel value={tabValue} index={3}>
-            <RuleEngineManager />
-          </TabPanel>
-          
-          {/* API & Tools Tab */}
-          <TabPanel value={tabValue} index={4}>
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Outils Simulés
+                      🔌 Serveur MCP
+                    </Typography>
+                    <MCPManager />
+                  </CardContent>
+                </Card>
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      🛠️ Outils API
                     </Typography>
                     <List>
                       <ListItem>
@@ -292,106 +261,17 @@ const Layout: React.FC = () => {
                   </CardContent>
                 </Card>
               </Grid>
-              
-              <Grid item xs={12} md={6}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Test de Requête
-                    </Typography>
-                    <TextField
-                      fullWidth
-                      multiline
-                      rows={4}
-                      label="Requête en langage naturel"
-                      placeholder="Ex: Je veux commander 2 produits avec livraison express"
-                      margin="normal"
-                      value={testQuery}
-                      onChange={(e) => setTestQuery(e.target.value)}
-                    />
-                    <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                      <Button 
-                        variant="contained" 
-                        color="primary"
-                        onClick={async () => {
-                          if (!testQuery.trim()) {
-                            alert('Veuillez saisir une requête');
-                            return;
-                          }
-                          try {
-                            const response = await fetch('http://localhost:5001/api/rules/test', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ query: testQuery })
-                            });
-                            const result = await response.json();
-                            if (result.success) {
-                              let message = `Test réussi!\n`;
-                              message += `Intention: ${result.result.intent}\n`;
-                              message += `Confiance: ${result.result.confidence}\n\n`;
-                              message += `Actions exécutées (${result.result.executed_actions.length}):\n`;
-                              
-                              result.result.executed_actions.forEach((action: any, index: number) => {
-                                message += `${index + 1}. ${action.action} (règle: ${action.rule})\n`;
-                                if (action.result && action.result.status) {
-                                  message += `   → ${action.result.status}\n`;
-                                }
-                              });
-                              
-                              if (result.result.entities) {
-                                const entities = result.result.entities;
-                                const entityList = Object.entries(entities)
-                                  .filter(([key, value]) => value !== null && value !== undefined)
-                                  .map(([key, value]) => `${key}: ${value}`)
-                                  .join(', ');
-                                
-                                if (entityList) {
-                                  message += `\nEntités détectées: ${entityList}`;
-                                }
-                              }
-                              
-                              alert(message);
-                            } else {
-                              alert(`Erreur: ${result.error}`);
-                            }
-                          } catch (error) {
-                            alert(`Erreur de connexion: ${error}`);
-                          }
-                        }}
-                      >
-                        Envoyer
-                      </Button>
-                      <Button 
-                        variant="outlined"
-                        onClick={() => setTestQuery('')}
-                      >
-                        Effacer
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
             </Grid>
           </TabPanel>
 
-          {/* Configurations Tab */}
+          {/* Base de Connaissances Tab */}
+          <TabPanel value={tabValue} index={4}>
+            <OntologyManager />
+          </TabPanel>
+
+          {/* Moteur de Règles Tab */}
           <TabPanel value={tabValue} index={5}>
-            <ConfigurationManager />
-          </TabPanel>
-
-          {/* LLM Workflow Generator Tab */}
-          <TabPanel value={tabValue} index={6}>
-            <LLMWorkflowGenerator />
-          </TabPanel>
-
-          {/* RAG Chat Tab */}
-          <TabPanel value={tabValue} index={7}>
-            <RAGChatInterface />
-          </TabPanel>
-
-          {/* MCP Tab */}
-          <TabPanel value={tabValue} index={8}>
-            <MCPManager />
+            <RuleEngineManager />
           </TabPanel>
         </Paper>
       </Container>
