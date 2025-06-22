@@ -79,7 +79,7 @@ const SystemStatus: React.FC = () => {
     llmInterface: { status: 'Opérationnel', color: 'success', details: 'OpenAI API connectée' },
     agent: { status: 'Opérationnel', color: 'success', details: 'Agent cognitif actif' },
     ruleEngine: { status: 'Opérationnel', color: 'success', details: '12 règles métier actives' },
-    mcpServer: { status: 'En cours', color: 'warning', details: 'Serveur MCP en démarrage' }
+    mcpServer: { status: 'En cours', color: 'warning', details: 'Vérification de la connexion...' }
   });
 
   const [metrics, setMetrics] = useState({
@@ -89,6 +89,83 @@ const SystemStatus: React.FC = () => {
     cpuUsage: 45,
     activeConnections: 8
   });
+
+  // État MCP comme dans MCPManager
+  const [mcpStatus, setMcpStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+  const [mcpWs, setMcpWs] = useState<WebSocket | null>(null);
+
+  // Connexion MCP comme dans MCPManager
+  useEffect(() => {
+    setMcpStatus('checking');
+    const socket = new window.WebSocket('ws://localhost:8002');
+    setMcpWs(socket);
+    let isOpen = false;
+    let hasReportedSuccess = false;
+
+    socket.onopen = () => {
+      isOpen = true;
+      hasReportedSuccess = true;
+      setMcpStatus('online');
+      setSystemStatus(prev => ({
+        ...prev,
+        mcpServer: { 
+          status: 'Opérationnel', 
+          color: 'success', 
+          details: 'Serveur MCP connecté' 
+        }
+      }));
+      // Ne pas fermer la connexion immédiatement
+    };
+
+    socket.onerror = () => {
+      if (!hasReportedSuccess) {
+        setMcpStatus('offline');
+        setSystemStatus(prev => ({
+          ...prev,
+          mcpServer: { 
+            status: 'Erreur', 
+            color: 'error', 
+            details: 'Serveur MCP non accessible' 
+          }
+        }));
+      }
+    };
+
+    socket.onclose = () => {
+      if (isOpen && !hasReportedSuccess) {
+        setMcpStatus('offline');
+        setSystemStatus(prev => ({
+          ...prev,
+          mcpServer: { 
+            status: 'Erreur', 
+            color: 'error', 
+            details: 'Connexion MCP fermée' 
+          }
+        }));
+      }
+    };
+
+    // Timeout pour éviter les blocages
+    const timeout = setTimeout(() => {
+      if (!hasReportedSuccess) {
+        setMcpStatus('offline');
+        setSystemStatus(prev => ({
+          ...prev,
+          mcpServer: { 
+            status: 'Erreur', 
+            color: 'error', 
+            details: 'Serveur MCP non accessible (timeout)' 
+          }
+        }));
+        socket.close();
+      }
+    }, 3000);
+
+    return () => {
+      clearTimeout(timeout);
+      socket.close();
+    };
+  }, []);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -120,11 +197,83 @@ const SystemStatus: React.FC = () => {
     return labels[key] || key;
   };
 
+  const handleRefreshStatus = async () => {
+    // Fermer la connexion existante si elle existe
+    if (mcpWs) {
+      mcpWs.close();
+    }
+    
+    // Recréer une nouvelle connexion
+    setMcpStatus('checking');
+    const socket = new window.WebSocket('ws://localhost:8002');
+    setMcpWs(socket);
+    let isOpen = false;
+    let hasReportedSuccess = false;
+
+    socket.onopen = () => {
+      isOpen = true;
+      hasReportedSuccess = true;
+      setMcpStatus('online');
+      setSystemStatus(prev => ({
+        ...prev,
+        mcpServer: { 
+          status: 'Opérationnel', 
+          color: 'success', 
+          details: 'Serveur MCP connecté' 
+        }
+      }));
+    };
+
+    socket.onerror = () => {
+      if (!hasReportedSuccess) {
+        setMcpStatus('offline');
+        setSystemStatus(prev => ({
+          ...prev,
+          mcpServer: { 
+            status: 'Erreur', 
+            color: 'error', 
+            details: 'Serveur MCP non accessible' 
+          }
+        }));
+      }
+    };
+
+    socket.onclose = () => {
+      if (isOpen && !hasReportedSuccess) {
+        setMcpStatus('offline');
+        setSystemStatus(prev => ({
+          ...prev,
+          mcpServer: { 
+            status: 'Erreur', 
+            color: 'error', 
+            details: 'Connexion MCP fermée' 
+          }
+        }));
+      }
+    };
+
+    // Timeout après 3 secondes
+    setTimeout(() => {
+      if (!hasReportedSuccess) {
+        setMcpStatus('offline');
+        setSystemStatus(prev => ({
+          ...prev,
+          mcpServer: { 
+            status: 'Erreur', 
+            color: 'error', 
+            details: 'Serveur MCP non accessible (timeout)' 
+          }
+        }));
+        socket.close();
+      }
+    }, 3000);
+  };
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       {/* Header */}
       <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-        🏠 Dashboard - Vue d'ensemble du système
+        🏠 Dashboard - Vue d'ensemble du Système Cognitif Générique & Réflexif
       </Typography>
 
       <Grid container spacing={3}>
@@ -236,6 +385,9 @@ const SystemStatus: React.FC = () => {
                 <Button variant="contained" color="primary">
                   🔄 Redémarrer le système
                 </Button>
+                <Button variant="outlined" color="primary" onClick={handleRefreshStatus}>
+                  🔍 Vérifier statut MCP
+                </Button>
                 <Button variant="outlined" color="primary">
                   📊 Voir les logs
                 </Button>
@@ -275,7 +427,7 @@ const SystemStatus: React.FC = () => {
                 <div style={{ color: 'green' }}>[10:30:18] 🤖 Interface LLM connectée</div>
                 <div style={{ color: 'blue' }}>[10:30:19] ⚙️ Moteur de règles initialisé (12 règles)</div>
                 <div style={{ color: 'green' }}>[10:30:20] ✅ Prêt à traiter les requêtes</div>
-                <div style={{ color: 'orange' }}>[10:31:05] 🔌 Serveur MCP en cours de démarrage</div>
+                <div style={{ color: 'green' }}>[10:31:05] 🔌 Serveur MCP connecté</div>
                 <div style={{ color: 'blue' }}>[10:31:15] 📊 3 requêtes traitées avec succès</div>
                 <div style={{ color: 'purple' }}>[10:32:00] 💬 Session RAG démarrée</div>
                 <div style={{ color: 'blue' }}>[10:32:30] 🛠️ Test d'outil MCP réussi</div>

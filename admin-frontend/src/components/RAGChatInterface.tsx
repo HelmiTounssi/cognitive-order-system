@@ -205,7 +205,7 @@ const RAGChatInterface: React.FC = () => {
         setSuggestions(data.suggestions);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des suggestions');
+      console.error('Erreur lors du chargement des suggestions:', error);
     }
   };
 
@@ -233,7 +233,6 @@ const RAGChatInterface: React.FC = () => {
         if (currentConversation?.id === conversationId) {
           setCurrentConversation(null);
           setMessages([]);
-          setSuggestions([]);
         }
       }
     } catch (error) {
@@ -246,9 +245,7 @@ const RAGChatInterface: React.FC = () => {
       const response = await fetch(`${API_BASE}/rag/conversations/${conversationId}/export`);
       const data = await response.json();
       if (data.success) {
-        const blob = new Blob([JSON.stringify(data.conversation, null, 2)], {
-          type: 'application/json'
-        });
+        const blob = new Blob([JSON.stringify(data.conversation, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -270,30 +267,31 @@ const RAGChatInterface: React.FC = () => {
 
   const getDomainColor = (domain: string) => {
     const colors: { [key: string]: string } = {
-      healthcare: '#e3f2fd',
-      ecommerce: '#f3e5f5',
-      restaurant: '#e8f5e8',
-      generic: '#f5f5f5'
+      'ecommerce': '#4caf50',
+      'healthcare': '#2196f3',
+      'finance': '#ff9800',
+      'education': '#9c27b0',
+      'default': '#757575'
     };
-    return colors[domain] || colors.generic;
+    return colors[domain] || colors.default;
   };
 
   const getDomainLabel = (domain: string) => {
     const labels: { [key: string]: string } = {
-      healthcare: 'Santé',
-      ecommerce: 'E-commerce',
-      restaurant: 'Restaurant',
-      generic: 'Générique'
+      'ecommerce': 'E-commerce',
+      'healthcare': 'Santé',
+      'finance': 'Finance',
+      'education': 'Éducation',
+      'default': 'Général'
     };
-    return labels[domain] || 'Générique';
+    return labels[domain] || labels.default;
   };
 
   const checkRAGStatus = async () => {
     try {
-      setRagStatus('checking');
       const response = await fetch(`${API_BASE}/rag/status`);
       const data = await response.json();
-      if (data.success && data.status === 'online') {
+      if (data.success) {
         setRagStatus('online');
       } else {
         setRagStatus('offline');
@@ -307,350 +305,288 @@ const RAGChatInterface: React.FC = () => {
     switch (ragStatus) {
       case 'online': return 'success';
       case 'offline': return 'error';
-      case 'checking': return 'warning';
-      default: return 'default';
+      default: return 'warning';
     }
   };
 
   const getStatusText = () => {
     switch (ragStatus) {
-      case 'online': return 'RAG Online';
-      case 'offline': return 'RAG Offline';
-      case 'checking': return 'Vérification...';
-      default: return 'Inconnu';
+      case 'online': return 'Connecté';
+      case 'offline': return 'Déconnecté';
+      default: return 'Vérification...';
     }
   };
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh' }}>
-      {/* Sidebar des conversations */}
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: 320,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: 320,
-            boxSizing: 'border-box',
-          },
-        }}
-      >
-        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-          <Typography variant="h6" gutterBottom>
-            Conversations RAG
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={createNewConversation}
-            fullWidth
-            sx={{ mb: 2 }}
-          >
-            Nouvelle conversation
-          </Button>
-        </Box>
-
-        <List sx={{ flex: 1, overflow: 'auto' }}>
-          {conversations.map((conversation) => (
-            <ListItem
-              key={conversation.id}
-              button
-              selected={currentConversation?.id === conversation.id}
-              onClick={() => loadConversation(conversation.id)}
-              sx={{ flexDirection: 'column', alignItems: 'flex-start' }}
-            >
-              <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
-                <Typography variant="subtitle2" noWrap sx={{ maxWidth: '200px' }}>
-                  {conversation.title}
-                </Typography>
-                <Box>
-                  <Tooltip title="Analytics">
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        loadAnalytics(conversation.id);
-                      }}
-                    >
-                      <AnalyticsIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Exporter">
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        exportConversation(conversation.id);
-                      }}
-                    >
-                      <DownloadIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Supprimer">
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteConversation(conversation.id);
-                      }}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-              </Box>
-              <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                <Chip
-                  label={getDomainLabel(conversation.domain)}
-                  size="small"
-                  sx={{ backgroundColor: getDomainColor(conversation.domain) }}
-                />
-                <Typography variant="caption" color="text.secondary">
-                  {conversation.message_count} messages
-                </Typography>
-              </Box>
-              <Typography variant="caption" color="text.secondary">
-                {new Date(conversation.updated_at).toLocaleDateString()}
-              </Typography>
-            </ListItem>
-          ))}
-        </List>
-      </Drawer>
-
-      {/* Zone de chat principale */}
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* Header */}
-        <Paper sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <ChatIcon />
-              <Typography variant="h6">
-                {currentConversation?.title || 'Assistant RAG'}
-              </Typography>
-              {currentConversation && (
-                <Chip
-                  label={getDomainLabel(currentConversation.domain)}
-                  sx={{ backgroundColor: getDomainColor(currentConversation.domain) }}
-                />
-              )}
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* Header avec statut */}
+      <Card sx={{ mb: 2 }}>
+        <CardContent sx={{ py: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6">💬 Interface RAG - Assistant IA</Typography>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               <Chip
                 label={getStatusText()}
                 color={getStatusColor() as any}
                 size="small"
-                icon={ragStatus === 'checking' ? <CircularProgress size={16} /> : undefined}
+                variant={ragStatus === 'online' ? 'filled' : 'outlined'}
               />
-              <Tooltip title="Vérifier le statut RAG">
-                <IconButton
-                  size="small"
-                  onClick={checkRAGStatus}
-                  disabled={ragStatus === 'checking'}
-                >
-                  <CloseIcon sx={{ transform: 'rotate(45deg)' }} />
-                </IconButton>
-              </Tooltip>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => setDrawerOpen(true)}
+                startIcon={<ChatIcon />}
+              >
+                Conversations ({conversations.length})
+              </Button>
             </Box>
           </Box>
-        </Paper>
+        </CardContent>
+      </Card>
 
-        {/* Messages */}
-        <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-          {messages.length === 0 ? (
-            <Box sx={{ textAlign: 'center', mt: 4 }}>
-              <ChatIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h6" color="text.secondary" gutterBottom>
-                Commencez une nouvelle conversation
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Posez vos questions sur les workflows, patterns et règles métier
-              </Typography>
-            </Box>
-          ) : (
-            <>
-              {messages.map((message) => (
-                <Box
-                  key={message.id}
-                  sx={{
-                    display: 'flex',
-                    justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start',
-                    mb: 2
-                  }}
-                >
-                  <Paper
-                    sx={{
-                      p: 2,
-                      maxWidth: '70%',
-                      backgroundColor: message.sender === 'user' ? 'primary.main' : 'grey.100',
-                      color: message.sender === 'user' ? 'white' : 'text.primary'
-                    }}
-                  >
-                    <Typography variant="body1">{message.content}</Typography>
-                    {message.metadata && (
-                      <Box sx={{ mt: 1 }}>
-                        {message.metadata.confidence && (
-                          <Chip
-                            label={`Confiance: ${(message.metadata.confidence * 100).toFixed(1)}%`}
-                            size="small"
-                            color={message.metadata.confidence > 0.7 ? 'success' : 'warning'}
-                          />
+      {/* Messages d'erreur */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+
+      {/* Interface principale */}
+      <Box sx={{ flexGrow: 1, display: 'flex', gap: 2, minHeight: 0 }}>
+        {/* Zone de chat */}
+        <Card sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+          <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: 0 }}>
+            {/* En-tête de conversation */}
+            {currentConversation && (
+              <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box>
+                    <Typography variant="h6">{currentConversation.title}</Typography>
+                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                      <Chip
+                        label={getDomainLabel(currentConversation.domain)}
+                        size="small"
+                        sx={{ bgcolor: getDomainColor(currentConversation.domain), color: 'white' }}
+                      />
+                      <Typography variant="body2" color="text.secondary">
+                        {currentConversation.message_count} messages
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <IconButton size="small" onClick={() => loadAnalytics(currentConversation.id)}>
+                      <AnalyticsIcon />
+                    </IconButton>
+                    <IconButton size="small" onClick={() => exportConversation(currentConversation.id)}>
+                      <DownloadIcon />
+                    </IconButton>
+                    <IconButton size="small" onClick={() => deleteConversation(currentConversation.id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                </Box>
+              </Box>
+            )}
+
+            {/* Messages */}
+            <Box sx={{ flexGrow: 1, overflow: 'auto', p: 2, minHeight: 0 }}>
+              {messages.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    {currentConversation ? 'Aucun message dans cette conversation' : 'Aucune conversation sélectionnée'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {currentConversation ? 'Commencez à discuter avec l\'assistant IA' : 'Sélectionnez une conversation ou créez-en une nouvelle'}
+                  </Typography>
+                </Box>
+              ) : (
+                <List sx={{ p: 0 }}>
+                  {messages.map((message) => (
+                    <ListItem key={message.id} sx={{ flexDirection: 'column', alignItems: 'flex-start', p: 0, mb: 2 }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        gap: 1, 
+                        width: '100%',
+                        justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start'
+                      }}>
+                        {message.sender === 'assistant' && (
+                          <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}>
+                            <ChatIcon />
+                          </Avatar>
                         )}
-                        {message.metadata.suggested_actions && message.metadata.suggested_actions.length > 0 && (
-                          <Box sx={{ mt: 1 }}>
-                            <Typography variant="caption" color="text.secondary">
-                              Actions suggérées:
-                            </Typography>
-                            {message.metadata.suggested_actions.map((action: string, index: number) => (
-                              <Chip
-                                key={index}
-                                label={action}
-                                size="small"
-                                variant="outlined"
-                                sx={{ mr: 0.5, mt: 0.5 }}
-                              />
-                            ))}
-                          </Box>
+                        <Paper sx={{ 
+                          p: 2, 
+                          maxWidth: '70%',
+                          bgcolor: message.sender === 'user' ? 'primary.main' : 'grey.100',
+                          color: message.sender === 'user' ? 'white' : 'text.primary'
+                        }}>
+                          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                            {message.content}
+                          </Typography>
+                          {message.rag_context && (
+                            <Box sx={{ mt: 1, pt: 1, borderTop: 1, borderColor: 'divider' }}>
+                              <Typography variant="caption" color="text.secondary">
+                                Sources: {message.rag_context.sources?.length || 0} documents
+                              </Typography>
+                            </Box>
+                          )}
+                        </Paper>
+                        {message.sender === 'user' && (
+                          <Avatar sx={{ bgcolor: 'secondary.main', width: 32, height: 32 }}>
+                            👤
+                          </Avatar>
                         )}
                       </Box>
-                    )}
-                    <Typography variant="caption" sx={{ opacity: 0.7, mt: 1, display: 'block' }}>
-                      {new Date(message.timestamp).toLocaleTimeString()}
-                    </Typography>
-                  </Paper>
-                </Box>
-              ))}
-              <div ref={messagesEndRef} />
-            </>
-          )}
-        </Box>
+                    </ListItem>
+                  ))}
+                  {isLoading && (
+                    <ListItem sx={{ justifyContent: 'flex-start', p: 0, mb: 2 }}>
+                      <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32, mr: 1 }}>
+                        <ChatIcon />
+                      </Avatar>
+                      <Paper sx={{ p: 2, bgcolor: 'grey.100' }}>
+                        <CircularProgress size={20} />
+                      </Paper>
+                    </ListItem>
+                  )}
+                  <div ref={messagesEndRef} />
+                </List>
+              )}
+            </Box>
 
-        {/* Suggestions */}
-        {suggestions.length > 0 && (
-          <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-            <Typography variant="subtitle2" gutterBottom>
-              <LightbulbIcon sx={{ mr: 1, fontSize: 16 }} />
-              Suggestions
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              {suggestions.map((suggestion, index) => (
-                <Chip
-                  key={index}
-                  label={suggestion}
-                  clickable
-                  onClick={() => setInputMessage(suggestion)}
-                  variant="outlined"
+            {/* Suggestions */}
+            {suggestions.length > 0 && (
+              <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  💡 Suggestions
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  {suggestions.map((suggestion, index) => (
+                    <Chip
+                      key={index}
+                      label={suggestion}
+                      size="small"
+                      onClick={() => setInputMessage(suggestion)}
+                      sx={{ cursor: 'pointer' }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            )}
+
+            {/* Zone de saisie */}
+            <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <TextField
+                  fullWidth
+                  multiline
+                  maxRows={4}
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Posez votre question à l'assistant IA..."
+                  disabled={isLoading}
                   size="small"
                 />
-              ))}
+                <Button
+                  variant="contained"
+                  onClick={sendMessage}
+                  disabled={!inputMessage.trim() || isLoading}
+                  sx={{ minWidth: 'auto', px: 2 }}
+                >
+                  <SendIcon />
+                </Button>
+              </Box>
             </Box>
-          </Box>
-        )}
-
-        {/* Zone de saisie */}
-        <Paper sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-              {error}
-            </Alert>
-          )}
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <TextField
-              fullWidth
-              multiline
-              maxRows={4}
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Posez votre question..."
-              disabled={isLoading}
-            />
-            <Button
-              variant="contained"
-              onClick={sendMessage}
-              disabled={!inputMessage.trim() || isLoading}
-              sx={{ minWidth: 'auto', px: 2 }}
-            >
-              {isLoading ? <CircularProgress size={24} /> : <SendIcon />}
-            </Button>
-          </Box>
-        </Paper>
+          </CardContent>
+        </Card>
       </Box>
+
+      {/* Drawer des conversations */}
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        sx={{ '& .MuiDrawer-paper': { width: 350 } }}
+      >
+        <Box sx={{ p: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6">Conversations</Typography>
+            <IconButton onClick={() => setDrawerOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={createNewConversation}
+            startIcon={<AddIcon />}
+            sx={{ mb: 2 }}
+          >
+            Nouvelle conversation
+          </Button>
+
+          <List>
+            {conversations.map((conversation) => (
+              <ListItem
+                key={conversation.id}
+                button
+                selected={currentConversation?.id === conversation.id}
+                onClick={() => {
+                  loadConversation(conversation.id);
+                  setDrawerOpen(false);
+                }}
+                sx={{ flexDirection: 'column', alignItems: 'flex-start' }}
+              >
+                <ListItemText
+                  primary={conversation.title}
+                  secondary={
+                    <Box>
+                      <Chip
+                        label={getDomainLabel(conversation.domain)}
+                        size="small"
+                        sx={{ bgcolor: getDomainColor(conversation.domain), color: 'white', mr: 1 }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        {conversation.message_count} messages • {new Date(conversation.updated_at).toLocaleDateString()}
+                      </Typography>
+                    </Box>
+                  }
+                />
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+      </Drawer>
 
       {/* Dialog Analytics */}
       <Dialog open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          Analytics de la conversation
-          <IconButton
-            onClick={() => setAnalyticsOpen(false)}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
+        <DialogTitle>Analytics de la conversation</DialogTitle>
         <DialogContent>
           {analytics && (
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6">Messages</Typography>
+            <Box>
+              <Typography variant="h6" gutterBottom>Statistiques</Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Paper sx={{ p: 2, textAlign: 'center' }}>
                     <Typography variant="h4">{analytics.total_messages}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Total des échanges
-                    </Typography>
-                  </CardContent>
-                </Card>
+                    <Typography variant="body2">Messages totaux</Typography>
+                  </Paper>
+                </Grid>
+                <Grid item xs={6}>
+                  <Paper sx={{ p: 2, textAlign: 'center' }}>
+                    <Typography variant="h4">{analytics.avg_response_time}s</Typography>
+                    <Typography variant="body2">Temps de réponse moyen</Typography>
+                  </Paper>
+                </Grid>
               </Grid>
-              <Grid item xs={6}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6">Confiance</Typography>
-                    <Typography variant="h4">
-                      {(analytics.average_confidence * 100).toFixed(1)}%
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Moyenne des réponses
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={6}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6">Sources</Typography>
-                    <Typography variant="h4">{analytics.sources_used?.length || 0}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Types de sources utilisées
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={6}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6">Actions</Typography>
-                    <Typography variant="h4">{analytics.suggested_actions_count || 0}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Actions suggérées
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6">Sujets discutés</Typography>
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
-                      {analytics.topics?.map((topic: string, index: number) => (
-                        <Chip key={index} label={topic} size="small" />
-                      ))}
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
+            </Box>
           )}
         </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAnalyticsOpen(false)}>Fermer</Button>
+        </DialogActions>
       </Dialog>
     </Box>
   );

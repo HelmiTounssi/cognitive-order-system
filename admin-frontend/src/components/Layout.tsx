@@ -100,7 +100,7 @@ const Layout: React.FC = () => {
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            🧠 Système de Gestion Cognitif - Interface d'Administration
+            🧠 Système Cognitif Générique & Réflexif - Interface d'Administration
           </Typography>
         </Toolbar>
       </AppBar>
@@ -112,15 +112,22 @@ const Layout: React.FC = () => {
               value={tabValue} 
               onChange={handleTabChange} 
               aria-label="admin tabs"
-              variant="scrollable"
-              scrollButtons="auto"
+              variant="fullWidth"
+              sx={{ 
+                '& .MuiTab-root': { 
+                  minWidth: 'auto',
+                  fontSize: '0.875rem',
+                  padding: '8px 12px'
+                }
+              }}
             >
               <Tab icon={<DashboardIcon />} label="Dashboard" {...a11yProps(0)} />
               <Tab icon={<SettingsIcon />} label="Configuration" {...a11yProps(1)} />
-              <Tab icon={<PsychologyIcon />} label="IA & RAG" {...a11yProps(2)} />
-              <Tab icon={<ToolsIcon />} label="Outils & MCP" {...a11yProps(3)} />
-              <Tab icon={<StorageIcon />} label="Base de Connaissances" {...a11yProps(4)} />
-              <Tab icon={<RuleIcon />} label="Moteur de Règles" {...a11yProps(5)} />
+              <Tab icon={<PsychologyIcon />} label="Assistants LLM" {...a11yProps(2)} />
+              <Tab icon={<MonitorIcon />} label="Interface RAG" {...a11yProps(3)} />
+              <Tab icon={<ToolsIcon />} label="Outils & MCP" {...a11yProps(4)} />
+              <Tab icon={<StorageIcon />} label="Base de Connaissances" {...a11yProps(5)} />
+              <Tab icon={<RuleIcon />} label="Moteur de Règles" {...a11yProps(6)} />
             </Tabs>
           </Box>
 
@@ -134,35 +141,18 @@ const Layout: React.FC = () => {
             <ConfigurationManager />
           </TabPanel>
 
-          {/* IA & RAG Tab */}
+          {/* Assistants LLM Tab */}
           <TabPanel value={tabValue} index={2}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      🤖 Assistants LLM
-                    </Typography>
-                    <LLMWorkflowGenerator />
-                  </CardContent>
-                </Card>
-              </Grid>
-              
-              <Grid item xs={12} md={6}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      💬 Interface RAG Chat
-                    </Typography>
-                    <RAGChatInterface />
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
+            <LLMWorkflowGenerator />
+          </TabPanel>
+
+          {/* Interface RAG Tab */}
+          <TabPanel value={tabValue} index={3}>
+            <RAGChatInterface />
           </TabPanel>
 
           {/* Outils & MCP Tab */}
-          <TabPanel value={tabValue} index={3}>
+          <TabPanel value={tabValue} index={4}>
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <Card>
@@ -265,12 +255,12 @@ const Layout: React.FC = () => {
           </TabPanel>
 
           {/* Base de Connaissances Tab */}
-          <TabPanel value={tabValue} index={4}>
+          <TabPanel value={tabValue} index={5}>
             <OntologyManager />
           </TabPanel>
 
           {/* Moteur de Règles Tab */}
-          <TabPanel value={tabValue} index={5}>
+          <TabPanel value={tabValue} index={6}>
             <RuleEngineManager />
           </TabPanel>
         </Paper>
