@@ -172,6 +172,9 @@ yarn-error.log*
 .npm
 .yarn-integrity
 
+# React frontend (exclu du versioning)
+admin-frontend/
+
 # React build files
 admin-frontend/build/
 admin-frontend/dist/
