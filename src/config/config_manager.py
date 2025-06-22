@@ -3,11 +3,9 @@ Gestionnaire de Configuration Métier
 Import/Export de configurations en YAML et JSON
 """
 
-import os
 import json
-import yaml
 import logging
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 from datetime import datetime
 from dataclasses import dataclass, asdict
 from pathlib import Path
@@ -56,15 +54,17 @@ class ConfigurationManager:
         self.config_dir.mkdir(exist_ok=True)
         self.logger = logging.getLogger(__name__)
         
-    def export_configuration(self, 
-                           rule_engine, 
-                           knowledge_base, 
-                           vector_store, 
-                           llm_config: Dict = None,
-                           tools_config: Dict = None,
-                           agent_config: Dict = None,
-                           format: str = 'json',
-                           filename: str = None) -> str:
+    def export_configuration(
+        self,
+        rule_engine,
+        knowledge_base,
+        vector_store,
+        llm_config: Dict = None,
+        tools_config: Dict = None,
+        agent_config: Dict = None,
+        format: str = 'json',
+        filename: str = None
+    ) -> str:
         """
         Exporte la configuration complète du système
         
@@ -341,7 +341,7 @@ class ConfigurationManager:
             
             # Ajout des nouvelles règles
             if 'business_rules' in config:
-                from src.rule_engine import BusinessRule
+                from src.core.rule_engine import BusinessRule
                 from datetime import datetime
                 
                 for rule_data in config['business_rules']:
