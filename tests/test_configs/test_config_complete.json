@@ -1,0 +1,296 @@
+{
+  "name": "Configuration Métier - Système de Gestion Cognitif",
+  "description": "Configuration complète du système de gestion cognitif de commande",
+  "version": "1.0.0",
+  "created_at": "2025-06-22T01:32:56.212422",
+  "updated_at": "2025-06-22T01:32:56.212425",
+  "rule_engine": {
+    "business_rules": [
+      {
+        "name": "commande_validation",
+        "description": "Validation automatique des commandes",
+        "conditions": [
+          "intent:commander",
+          "has_quantity",
+          "has_product"
+        ],
+        "actions": [
+          "validate_order",
+          "check_stock",
+          "calculate_price"
+        ],
+        "priority": 1,
+        "category": "validation",
+        "enabled": true,
+        "created_at": "2025-06-22T01:32:54.842530"
+      },
+      {
+        "name": "livraison_express",
+        "description": "Règles pour livraison express",
+        "conditions": [
+          "intent:livraison",
+          "has_quantity"
+        ],
+        "actions": [
+          "check_express_availability",
+          "calculate_express_cost"
+        ],
+        "priority": 2,
+        "category": "livraison",
+        "enabled": true,
+        "created_at": "2025-06-22T01:32:54.843094"
+      },
+      {
+        "name": "paiement_securise",
+        "description": "Sécurisation des paiements",
+        "conditions": [
+          "intent:paiement",
+          "has_price"
+        ],
+        "actions": [
+          "validate_payment_method",
+          "apply_security_checks"
+        ],
+        "priority": 1,
+        "category": "paiement",
+        "enabled": true,
+        "created_at": "2025-06-22T01:32:54.843477"
+      },
+      {
+        "name": "stock_alerte",
+        "description": "Alertes de stock bas",
+        "conditions": [
+          "has_quantity",
+          "has_product"
+        ],
+        "actions": [
+          "check_stock_level",
+          "send_alert_if_low"
+        ],
+        "priority": 3,
+        "category": "stock",
+        "enabled": true,
+        "created_at": "2025-06-22T01:32:54.843785"
+      },
+      {
+        "name": "Règle Commande Express",
+        "description": "Gestion des commandes express avec livraison prioritaire",
+        "conditions": {
+          "intent": "commander",
+          "delivery_type": "express",
+          "amount": {
+            "operator": ">=",
+            "value": 50
+          }
+        },
+        "actions": [
+          {
+            "action": "check_stock",
+            "params": {
+              "product_id": "{product_id}"
+            }
+          },
+          {
+            "action": "process_payment",
+            "params": {
+              "amount": "{amount}"
+            }
+          },
+          {
+            "action": "schedule_delivery",
+            "params": {
+              "type": "express"
+            }
+          }
+        ],
+        "priority": 1,
+        "category": "commande",
+        "enabled": true,
+        "created_at": "2025-06-22T01:32:56.210922"
+      },
+      {
+        "name": "Règle Remise Fidélité",
+        "description": "Application de remise pour clients fidèles",
+        "conditions": {
+          "intent": "commander",
+          "customer_type": "fidèle",
+          "amount": {
+            "operator": ">=",
+            "value": 100
+          }
+        },
+        "actions": [
+          {
+            "action": "apply_discount",
+            "params": {
+              "percentage": 10
+            }
+          },
+          {
+            "action": "process_payment",
+            "params": {
+              "amount": "{amount_with_discount}"
+            }
+          }
+        ],
+        "priority": 2,
+        "category": "fidélité",
+        "enabled": true,
+        "created_at": "2025-06-22T01:32:56.210945"
+      }
+    ],
+    "statistics": {
+      "rule_engine": {
+        "total_rules": 6,
+        "total_facts": 0,
+        "total_inferences": 0,
+        "rule_categories": {
+          "commande": 1,
+          "livraison": 1,
+          "paiement": 1,
+          "stock": 1,
+          "general": 2
+        },
+        "performance_metrics": {
+          "avg_confidence": 0,
+          "success_rate": 0
+        }
+      },
+      "business_rules": {
+        "total": 6,
+        "enabled": 6,
+        "categories": {
+          "validation": 1,
+          "livraison": 1,
+          "paiement": 1,
+          "stock": 1,
+          "commande": 1,
+          "fidélité": 1
+        },
+        "recent_activity": []
+      }
+    },
+    "templates": {
+      "commande_validation": {
+        "description": "Validation automatique des commandes",
+        "conditions": [
+          "intent:commander",
+          "has_quantity",
+          "has_product"
+        ],
+        "actions": [
+          "validate_order",
+          "check_stock",
+          "calculate_price"
+        ],
+        "priority": 1,
+        "category": "validation"
+      },
+      "livraison_express": {
+        "description": "Règles pour livraison express",
+        "conditions": [
+          "intent:livraison",
+          "has_quantity"
+        ],
+        "actions": [
+          "check_express_availability",
+          "calculate_express_cost"
+        ],
+        "priority": 2,
+        "category": "livraison"
+      },
+      "paiement_securise": {
+        "description": "Sécurisation des paiements",
+        "conditions": [
+          "intent:paiement",
+          "has_price"
+        ],
+        "actions": [
+          "validate_payment_method",
+          "apply_security_checks"
+        ],
+        "priority": 1,
+        "category": "paiement"
+      },
+      "stock_alerte": {
+        "description": "Alertes de stock bas",
+        "conditions": [
+          "has_quantity",
+          "has_product"
+        ],
+        "actions": [
+          "check_stock_level",
+          "send_alert_if_low"
+        ],
+        "priority": 3,
+        "category": "stock"
+      }
+    }
+  },
+  "knowledge_base": {
+    "ontology_classes": [],
+    "instances": [],
+    "business_handlers": []
+  },
+  "vector_store": {
+    "collections": [],
+    "statistics": {}
+  },
+  "llm_config": {
+    "model": "gpt-3.5-turbo",
+    "temperature": 0.7,
+    "max_tokens": 1000,
+    "api_key_configured": true
+  },
+  "tools_config": {
+    "stock_api": {
+      "enabled": true,
+      "endpoint": "http://localhost:5001/api/tools/stock",
+      "timeout": 30
+    },
+    "payment_api": {
+      "enabled": true,
+      "endpoint": "http://localhost:5001/api/tools/payment",
+      "timeout": 60
+    },
+    "delivery_api": {
+      "enabled": true,
+      "endpoint": "http://localhost:5001/api/tools/delivery",
+      "timeout": 45
+    }
+  },
+  "agent_config": {
+    "intent_patterns": {
+      "commander": [
+        "commander",
+        "acheter",
+        "passer commande"
+      ],
+      "consulter": [
+        "consulter",
+        "voir",
+        "afficher"
+      ],
+      "annuler": [
+        "annuler",
+        "supprimer",
+        "retirer"
+      ]
+    },
+    "fallback_enabled": true,
+    "confidence_threshold": 0.7,
+    "max_actions_per_query": 5
+  },
+  "metadata": {
+    "exported_by": "ConfigurationManager",
+    "system_version": "1.0.0",
+    "components": [
+      "rule_engine",
+      "knowledge_base",
+      "vector_store",
+      "llm",
+      "tools",
+      "agent"
+    ]
+  }
+}

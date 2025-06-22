@@ -1,0 +1,285 @@
+name: "Configuration Restaurant Management"
+description: "Configuration pour un système de gestion de restaurant avec réservations et commandes"
+version: "1.0.0"
+created_at: "2024-01-15T11:00:00Z"
+updated_at: "2024-01-15T11:00:00Z"
+
+rule_engine:
+  business_rules:
+    - name: "Règle Réservation Table"
+      description: "Gestion des réservations de tables"
+      conditions:
+        intent: "réserver"
+        party_size:
+          operator: "<="
+          value: 8
+        date:
+          operator: ">="
+          value: "today"
+      actions:
+        - action: "check_table_availability"
+          params:
+            date: "{date}"
+            time: "{time}"
+            party_size: "{party_size}"
+        - action: "create_reservation"
+          params:
+            customer_id: "{customer_id}"
+            table_id: "{table_id}"
+        - action: "send_confirmation"
+          params:
+            customer_id: "{customer_id}"
+      priority: 1
+      category: "réservation"
+      enabled: true
+      created_at: "2024-01-15T11:00:00Z"
+
+    - name: "Règle Commande Livraison"
+      description: "Gestion des commandes en livraison"
+      conditions:
+        intent: "commander"
+        delivery_type: "livraison"
+        amount:
+          operator: ">="
+          value: 25
+      actions:
+        - action: "check_menu_availability"
+          params:
+            items: "{items}"
+        - action: "calculate_delivery_time"
+          params:
+            address: "{delivery_address}"
+        - action: "process_payment"
+          params:
+            amount: "{amount}"
+        - action: "assign_delivery"
+          params:
+            order_id: "{order_id}"
+      priority: 2
+      category: "livraison"
+      enabled: true
+      created_at: "2024-01-15T11:00:00Z"
+
+    - name: "Règle Gestion Stock"
+      description: "Gestion automatique du stock des ingrédients"
+      conditions:
+        intent: "commander"
+      actions:
+        - action: "check_ingredients_stock"
+          params:
+            menu_items: "{items}"
+        - action: "update_stock_levels"
+          params:
+            consumed_ingredients: "{consumed_ingredients}"
+        - action: "alert_low_stock"
+          params:
+            threshold: 10
+      priority: 3
+      category: "stock"
+      enabled: true
+      created_at: "2024-01-15T11:00:00Z"
+
+    - name: "Règle Fidélité Client"
+      description: "Programme de fidélité pour clients réguliers"
+      conditions:
+        intent: "commander"
+        customer_type: "régulier"
+        visit_count:
+          operator: ">="
+          value: 5
+      actions:
+        - action: "apply_loyalty_discount"
+          params:
+            percentage: 15
+        - action: "add_loyalty_points"
+          params:
+            points: "{points_earned}"
+        - action: "notify_loyalty_benefits"
+          params:
+            customer_id: "{customer_id}"
+      priority: 4
+      category: "fidélité"
+      enabled: true
+      created_at: "2024-01-15T11:00:00Z"
+
+  statistics:
+    total_rules: 4
+    active_rules: 4
+    rules_by_category:
+      réservation: 1
+      livraison: 1
+      stock: 1
+      fidélité: 1
+
+  templates:
+    reservation_template:
+      conditions:
+        intent: "réserver"
+      actions:
+        - action: "check_table_availability"
+        - action: "create_reservation"
+        - action: "send_confirmation"
+
+knowledge_base:
+  ontology_classes:
+    - name: "Table"
+      properties:
+        - "table_id"
+        - "capacity"
+        - "location"
+        - "status"
+        - "reservation_time"
+      description: "Entité représentant une table du restaurant"
+      uri: "http://example.com/ontology#Table"
+
+    - name: "Reservation"
+      properties:
+        - "reservation_id"
+        - "customer_id"
+        - "table_id"
+        - "date"
+        - "time"
+        - "party_size"
+        - "status"
+        - "special_requests"
+      description: "Entité représentant une réservation"
+      uri: "http://example.com/ontology#Reservation"
+
+    - name: "MenuItem"
+      properties:
+        - "item_id"
+        - "name"
+        - "description"
+        - "price"
+        - "category"
+        - "ingredients"
+        - "allergens"
+        - "availability"
+      description: "Entité représentant un plat du menu"
+      uri: "http://example.com/ontology#MenuItem"
+
+    - name: "Customer"
+      properties:
+        - "customer_id"
+        - "name"
+        - "phone"
+        - "email"
+        - "address"
+        - "loyalty_points"
+        - "visit_count"
+        - "preferences"
+      description: "Entité représentant un client"
+      uri: "http://example.com/ontology#Customer"
+
+    - name: "Order"
+      properties:
+        - "order_id"
+        - "customer_id"
+        - "items"
+        - "total"
+        - "order_type"
+        - "status"
+        - "created_at"
+        - "delivery_address"
+      description: "Entité représentant une commande"
+      uri: "http://example.com/ontology#Order"
+
+  instances: []
+  business_handlers:
+    - name: "ReservationHandler"
+      description: "Gestionnaire pour les réservations"
+      methods:
+        - "create_reservation"
+        - "check_availability"
+        - "cancel_reservation"
+    - name: "MenuHandler"
+      description: "Gestionnaire pour le menu"
+      methods:
+        - "get_menu_items"
+        - "check_availability"
+        - "update_prices"
+
+vector_store:
+  collections:
+    - name: "menu_items"
+      description: "Collection des plats du menu"
+      vector_count: 0
+    - name: "reservations"
+      description: "Collection des réservations"
+      vector_count: 0
+    - name: "customers"
+      description: "Collection des clients"
+      vector_count: 0
+  statistics:
+    total_vectors: 0
+    collections_count: 3
+
+llm_config:
+  model: "gpt-3.5-turbo"
+  temperature: 0.6
+  max_tokens: 800
+  api_key_configured: true
+  system_prompt: "Vous êtes un assistant spécialisé dans la gestion de restaurant. Vous pouvez gérer les réservations, les commandes et les demandes clients."
+
+tools_config:
+  reservation_api:
+    enabled: true
+    endpoint: "http://localhost:5001/api/tools/reservation"
+    timeout: 30
+    retry_count: 3
+  delivery_api:
+    enabled: true
+    endpoint: "http://localhost:5001/api/tools/delivery"
+    timeout: 45
+    retry_count: 2
+  payment_api:
+    enabled: true
+    endpoint: "http://localhost:5001/api/tools/payment"
+    timeout: 60
+    retry_count: 3
+  notification_api:
+    enabled: true
+    endpoint: "http://localhost:5001/api/tools/notification"
+    timeout: 30
+    retry_count: 2
+
+agent_config:
+  intent_patterns:
+    réserver:
+      - "réserver"
+      - "table"
+      - "réservation"
+      - "booker"
+      - "disponible"
+    commander:
+      - "commander"
+      - "menu"
+      - "plat"
+      - "livraison"
+      - "emporter"
+    consulter:
+      - "consulter"
+      - "voir"
+      - "menu"
+      - "horaires"
+      - "disponibilité"
+    annuler:
+      - "annuler"
+      - "supprimer"
+      - "retirer"
+      - "annuler réservation"
+  fallback_enabled: true
+  confidence_threshold: 0.6
+  max_actions_per_query: 4
+  response_timeout: 25
+
+metadata:
+  exported_by: "ConfigurationManager"
+  system_version: "1.0.0"
+  business_domain: "restaurant"
+  tags:
+    - "restaurant"
+    - "réservation"
+    - "livraison"
+    - "menu"
+  notes: "Configuration optimisée pour un restaurant avec gestion des réservations et commandes" 

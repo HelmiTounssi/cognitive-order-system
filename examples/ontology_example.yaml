@@ -1,0 +1,252 @@
+# Exemple d'Ontologie RDF pour Import/Export
+# Ce fichier peut être importé dans l'onglet "Base de Connaissances"
+
+ontology:
+  name: "Ontologie E-commerce Standard"
+  description: "Ontologie complète pour un système e-commerce"
+  version: "1.0.0"
+  namespace: "http://example.com/ontology#"
+  created_at: "2024-01-15T10:00:00Z"
+
+classes:
+  - name: "Product"
+    description: "Entité représentant un produit"
+    uri: "http://example.com/ontology#Product"
+    properties:
+      - name: "name"
+        type: "string"
+        description: "Nom du produit"
+        required: true
+      - name: "price"
+        type: "decimal"
+        description: "Prix du produit"
+        required: true
+      - name: "stock"
+        type: "integer"
+        description: "Quantité en stock"
+        required: true
+      - name: "category"
+        type: "string"
+        description: "Catégorie du produit"
+        required: false
+      - name: "description"
+        type: "text"
+        description: "Description détaillée"
+        required: false
+      - name: "brand"
+        type: "string"
+        description: "Marque du produit"
+        required: false
+      - name: "sku"
+        type: "string"
+        description: "Code SKU unique"
+        required: true
+
+  - name: "Order"
+    description: "Entité représentant une commande"
+    uri: "http://example.com/ontology#Order"
+    properties:
+      - name: "order_id"
+        type: "string"
+        description: "Identifiant unique de la commande"
+        required: true
+      - name: "customer_id"
+        type: "string"
+        description: "Identifiant du client"
+        required: true
+      - name: "items"
+        type: "array"
+        description: "Liste des articles commandés"
+        required: true
+      - name: "total"
+        type: "decimal"
+        description: "Montant total de la commande"
+        required: true
+      - name: "status"
+        type: "string"
+        description: "Statut de la commande"
+        required: true
+      - name: "created_at"
+        type: "datetime"
+        description: "Date de création"
+        required: true
+      - name: "delivery_address"
+        type: "object"
+        description: "Adresse de livraison"
+        required: false
+
+  - name: "Customer"
+    description: "Entité représentant un client"
+    uri: "http://example.com/ontology#Customer"
+    properties:
+      - name: "customer_id"
+        type: "string"
+        description: "Identifiant unique du client"
+        required: true
+      - name: "name"
+        type: "string"
+        description: "Nom complet du client"
+        required: true
+      - name: "email"
+        type: "email"
+        description: "Adresse email"
+        required: true
+      - name: "phone"
+        type: "string"
+        description: "Numéro de téléphone"
+        required: false
+      - name: "address"
+        type: "object"
+        description: "Adresse du client"
+        required: false
+      - name: "loyalty_points"
+        type: "integer"
+        description: "Points de fidélité"
+        required: false
+      - name: "customer_type"
+        type: "string"
+        description: "Type de client (nouveau, régulier, fidèle)"
+        required: false
+
+  - name: "Category"
+    description: "Entité représentant une catégorie de produits"
+    uri: "http://example.com/ontology#Category"
+    properties:
+      - name: "category_id"
+        type: "string"
+        description: "Identifiant de la catégorie"
+        required: true
+      - name: "name"
+        type: "string"
+        description: "Nom de la catégorie"
+        required: true
+      - name: "description"
+        type: "text"
+        description: "Description de la catégorie"
+        required: false
+      - name: "parent_category"
+        type: "string"
+        description: "Catégorie parente"
+        required: false
+      - name: "image_url"
+        type: "url"
+        description: "URL de l'image de la catégorie"
+        required: false
+
+  - name: "Review"
+    description: "Entité représentant un avis client"
+    uri: "http://example.com/ontology#Review"
+    properties:
+      - name: "review_id"
+        type: "string"
+        description: "Identifiant de l'avis"
+        required: true
+      - name: "product_id"
+        type: "string"
+        description: "Produit évalué"
+        required: true
+      - name: "customer_id"
+        type: "string"
+        description: "Client qui a écrit l'avis"
+        required: true
+      - name: "rating"
+        type: "integer"
+        description: "Note sur 5"
+        required: true
+      - name: "comment"
+        type: "text"
+        description: "Commentaire de l'avis"
+        required: false
+      - name: "created_at"
+        type: "datetime"
+        description: "Date de création"
+        required: true
+
+relationships:
+  - name: "hasCategory"
+    description: "Un produit appartient à une catégorie"
+    from: "Product"
+    to: "Category"
+    type: "many-to-one"
+  - name: "hasOrder"
+    description: "Un client peut avoir plusieurs commandes"
+    from: "Customer"
+    to: "Order"
+    type: "one-to-many"
+  - name: "containsProduct"
+    description: "Une commande contient plusieurs produits"
+    from: "Order"
+    to: "Product"
+    type: "many-to-many"
+  - name: "hasReview"
+    description: "Un produit peut avoir plusieurs avis"
+    from: "Product"
+    to: "Review"
+    type: "one-to-many"
+  - name: "wroteReview"
+    description: "Un client peut écrire plusieurs avis"
+    from: "Customer"
+    to: "Review"
+    type: "one-to-many"
+
+business_handlers:
+  - name: "ProductHandler"
+    description: "Gestionnaire pour les produits"
+    methods:
+      - name: "create_product"
+        description: "Créer un nouveau produit"
+        parameters:
+          - "name"
+          - "price"
+          - "category"
+      - name: "update_stock"
+        description: "Mettre à jour le stock"
+        parameters:
+          - "product_id"
+          - "quantity"
+      - name: "get_product_info"
+        description: "Récupérer les informations d'un produit"
+        parameters:
+          - "product_id"
+
+  - name: "OrderHandler"
+    description: "Gestionnaire pour les commandes"
+    methods:
+      - name: "create_order"
+        description: "Créer une nouvelle commande"
+        parameters:
+          - "customer_id"
+          - "items"
+      - name: "update_order_status"
+        description: "Mettre à jour le statut"
+        parameters:
+          - "order_id"
+          - "status"
+      - name: "calculate_total"
+        description: "Calculer le total"
+        parameters:
+          - "order_id"
+
+  - name: "CustomerHandler"
+    description: "Gestionnaire pour les clients"
+    methods:
+      - name: "create_customer"
+        description: "Créer un nouveau client"
+        parameters:
+          - "name"
+          - "email"
+      - name: "update_loyalty_points"
+        description: "Mettre à jour les points fidélité"
+        parameters:
+          - "customer_id"
+          - "points"
+
+metadata:
+  author: "Système de Gestion Cognitif"
+  created_date: "2024-01-15"
+  version: "1.0.0"
+  tags:
+    - "e-commerce"
+    - "ontologie"
+    - "rdf"
+  notes: "Ontologie standard pour système e-commerce avec entités principales et relations" 

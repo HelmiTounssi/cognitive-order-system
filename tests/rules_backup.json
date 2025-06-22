@@ -1,0 +1,68 @@
+[
+  {
+    "name": "commande_validation",
+    "description": "Validation automatique des commandes",
+    "conditions": [
+      "intent:commander",
+      "has_quantity",
+      "has_product"
+    ],
+    "actions": [
+      "validate_order",
+      "check_stock",
+      "calculate_price"
+    ],
+    "priority": 1,
+    "category": "validation",
+    "enabled": true,
+    "created_at": "2025-06-22T01:15:27.861412"
+  },
+  {
+    "name": "livraison_express",
+    "description": "Règles pour livraison express",
+    "conditions": [
+      "intent:livraison",
+      "has_quantity"
+    ],
+    "actions": [
+      "check_express_availability",
+      "calculate_express_cost"
+    ],
+    "priority": 2,
+    "category": "livraison",
+    "enabled": true,
+    "created_at": "2025-06-22T01:15:27.861418"
+  },
+  {
+    "name": "paiement_securise",
+    "description": "Sécurisation des paiements",
+    "conditions": [
+      "intent:paiement",
+      "has_price"
+    ],
+    "actions": [
+      "validate_payment_method",
+      "apply_security_checks"
+    ],
+    "priority": 1,
+    "category": "paiement",
+    "enabled": true,
+    "created_at": "2025-06-22T01:15:27.861421"
+  },
+  {
+    "name": "stock_alerte",
+    "description": "Alertes de stock bas",
+    "conditions": [
+      "has_quantity",
+      "has_product"
+    ],
+    "actions": [
+      "check_stock_level",
+      "send_alert_if_low"
+    ],
+    "priority": 3,
+    "category": "stock",
+    "enabled": true,
+    "created_at": "2025-06-22T01:15:27.861423"
+  }
+]

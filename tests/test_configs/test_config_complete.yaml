@@ -1,0 +1,218 @@
+agent_config:
+  confidence_threshold: 0.7
+  fallback_enabled: true
+  intent_patterns:
+    annuler:
+    - annuler
+    - supprimer
+    - retirer
+    commander:
+    - commander
+    - acheter
+    - passer commande
+    consulter:
+    - consulter
+    - voir
+    - afficher
+  max_actions_per_query: 5
+created_at: '2025-06-22T01:32:56.213835'
+description: Configuration complète du système de gestion cognitif de commande
+knowledge_base:
+  business_handlers: []
+  instances: []
+  ontology_classes: []
+llm_config:
+  api_key_configured: true
+  max_tokens: 1000
+  model: gpt-3.5-turbo
+  temperature: 0.7
+metadata:
+  components:
+  - rule_engine
+  - knowledge_base
+  - vector_store
+  - llm
+  - tools
+  - agent
+  exported_by: ConfigurationManager
+  system_version: 1.0.0
+name: Configuration Métier - Système de Gestion Cognitif
+rule_engine:
+  business_rules:
+  - actions:
+    - validate_order
+    - check_stock
+    - calculate_price
+    category: validation
+    conditions:
+    - intent:commander
+    - has_quantity
+    - has_product
+    created_at: '2025-06-22T01:32:54.842530'
+    description: Validation automatique des commandes
+    enabled: true
+    name: commande_validation
+    priority: 1
+  - actions:
+    - check_express_availability
+    - calculate_express_cost
+    category: livraison
+    conditions:
+    - intent:livraison
+    - has_quantity
+    created_at: '2025-06-22T01:32:54.843094'
+    description: Règles pour livraison express
+    enabled: true
+    name: livraison_express
+    priority: 2
+  - actions:
+    - validate_payment_method
+    - apply_security_checks
+    category: paiement
+    conditions:
+    - intent:paiement
+    - has_price
+    created_at: '2025-06-22T01:32:54.843477'
+    description: Sécurisation des paiements
+    enabled: true
+    name: paiement_securise
+    priority: 1
+  - actions:
+    - check_stock_level
+    - send_alert_if_low
+    category: stock
+    conditions:
+    - has_quantity
+    - has_product
+    created_at: '2025-06-22T01:32:54.843785'
+    description: Alertes de stock bas
+    enabled: true
+    name: stock_alerte
+    priority: 3
+  - actions:
+    - action: check_stock
+      params:
+        product_id: '{product_id}'
+    - action: process_payment
+      params:
+        amount: '{amount}'
+    - action: schedule_delivery
+      params:
+        type: express
+    category: commande
+    conditions:
+      amount:
+        operator: '>='
+        value: 50
+      delivery_type: express
+      intent: commander
+    created_at: '2025-06-22T01:32:56.210922'
+    description: Gestion des commandes express avec livraison prioritaire
+    enabled: true
+    name: Règle Commande Express
+    priority: 1
+  - actions:
+    - action: apply_discount
+      params:
+        percentage: 10
+    - action: process_payment
+      params:
+        amount: '{amount_with_discount}'
+    category: fidélité
+    conditions:
+      amount:
+        operator: '>='
+        value: 100
+      customer_type: fidèle
+      intent: commander
+    created_at: '2025-06-22T01:32:56.210945'
+    description: Application de remise pour clients fidèles
+    enabled: true
+    name: Règle Remise Fidélité
+    priority: 2
+  statistics:
+    business_rules:
+      categories:
+        commande: 1
+        fidélité: 1
+        livraison: 1
+        paiement: 1
+        stock: 1
+        validation: 1
+      enabled: 6
+      recent_activity: []
+      total: 6
+    rule_engine:
+      performance_metrics:
+        avg_confidence: 0
+        success_rate: 0
+      rule_categories:
+        commande: 1
+        general: 2
+        livraison: 1
+        paiement: 1
+        stock: 1
+      total_facts: 0
+      total_inferences: 0
+      total_rules: 6
+  templates:
+    commande_validation:
+      actions:
+      - validate_order
+      - check_stock
+      - calculate_price
+      category: validation
+      conditions:
+      - intent:commander
+      - has_quantity
+      - has_product
+      description: Validation automatique des commandes
+      priority: 1
+    livraison_express:
+      actions:
+      - check_express_availability
+      - calculate_express_cost
+      category: livraison
+      conditions:
+      - intent:livraison
+      - has_quantity
+      description: Règles pour livraison express
+      priority: 2
+    paiement_securise:
+      actions:
+      - validate_payment_method
+      - apply_security_checks
+      category: paiement
+      conditions:
+      - intent:paiement
+      - has_price
+      description: Sécurisation des paiements
+      priority: 1
+    stock_alerte:
+      actions:
+      - check_stock_level
+      - send_alert_if_low
+      category: stock
+      conditions:
+      - has_quantity
+      - has_product
+      description: Alertes de stock bas
+      priority: 3
+tools_config:
+  delivery_api:
+    enabled: true
+    endpoint: http://localhost:5001/api/tools/delivery
+    timeout: 45
+  payment_api:
+    enabled: true
+    endpoint: http://localhost:5001/api/tools/payment
+    timeout: 60
+  stock_api:
+    enabled: true
+    endpoint: http://localhost:5001/api/tools/stock
+    timeout: 30
+updated_at: '2025-06-22T01:32:56.213838'
+vector_store:
+  collections: []
+  statistics: {}
+version: 1.0.0

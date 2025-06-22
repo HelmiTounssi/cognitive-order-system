@@ -1,0 +1,303 @@
+name: "Configuration Healthcare Management"
+description: "Configuration pour un système de gestion de santé avec rendez-vous et dossiers patients"
+version: "1.0.0"
+created_at: "2024-01-15T12:00:00Z"
+updated_at: "2024-01-15T12:00:00Z"
+
+rule_engine:
+  business_rules:
+    - name: "Règle Rendez-vous Urgent"
+      description: "Gestion des rendez-vous urgents avec priorité"
+      conditions:
+        intent: "prendre_rdv"
+        urgency_level: "urgent"
+        patient_condition: "critique"
+      actions:
+        - action: "check_doctor_availability"
+          params:
+            specialty: "{specialty}"
+            urgency: "urgent"
+        - action: "schedule_emergency_appointment"
+          params:
+            patient_id: "{patient_id}"
+            doctor_id: "{doctor_id}"
+        - action: "notify_medical_team"
+          params:
+            patient_id: "{patient_id}"
+            urgency: "urgent"
+      priority: 1
+      category: "urgence"
+      enabled: true
+      created_at: "2024-01-15T12:00:00Z"
+
+    - name: "Règle Suivi Traitement"
+      description: "Suivi automatique des traitements en cours"
+      conditions:
+        intent: "suivi_traitement"
+        treatment_status: "en_cours"
+        days_since_last_visit:
+          operator: ">="
+          value: 30
+      actions:
+        - action: "check_treatment_progress"
+          params:
+            patient_id: "{patient_id}"
+            treatment_id: "{treatment_id}"
+        - action: "schedule_follow_up"
+          params:
+            patient_id: "{patient_id}"
+            doctor_id: "{doctor_id}"
+        - action: "send_reminder"
+          params:
+            patient_id: "{patient_id}"
+            message: "Rappel de suivi traitement"
+      priority: 2
+      category: "suivi"
+      enabled: true
+      created_at: "2024-01-15T12:00:00Z"
+
+    - name: "Règle Gestion Médicaments"
+      description: "Gestion des prescriptions et interactions médicamenteuses"
+      conditions:
+        intent: "prescrire"
+      actions:
+        - action: "check_drug_interactions"
+          params:
+            current_medications: "{current_medications}"
+            new_medication: "{new_medication}"
+        - action: "validate_prescription"
+          params:
+            doctor_id: "{doctor_id}"
+            patient_id: "{patient_id}"
+        - action: "update_medication_history"
+          params:
+            patient_id: "{patient_id}"
+            prescription: "{prescription}"
+      priority: 3
+      category: "médicaments"
+      enabled: true
+      created_at: "2024-01-15T12:00:00Z"
+
+    - name: "Règle Alertes Santé"
+      description: "Système d'alertes pour valeurs critiques"
+      conditions:
+        intent: "analyse_resultats"
+        test_value:
+          operator: "outside_range"
+          min: "{normal_min}"
+          max: "{normal_max}"
+      actions:
+        - action: "flag_abnormal_result"
+          params:
+            test_id: "{test_id}"
+            severity: "{severity}"
+        - action: "notify_doctor"
+          params:
+            doctor_id: "{doctor_id}"
+            patient_id: "{patient_id}"
+            alert_type: "abnormal_result"
+        - action: "schedule_urgent_review"
+          params:
+            patient_id: "{patient_id}"
+            priority: "high"
+      priority: 4
+      category: "alertes"
+      enabled: true
+      created_at: "2024-01-15T12:00:00Z"
+
+  statistics:
+    total_rules: 4
+    active_rules: 4
+    rules_by_category:
+      urgence: 1
+      suivi: 1
+      médicaments: 1
+      alertes: 1
+
+  templates:
+    appointment_template:
+      conditions:
+        intent: "prendre_rdv"
+      actions:
+        - action: "check_availability"
+        - action: "schedule_appointment"
+        - action: "send_confirmation"
+
+knowledge_base:
+  ontology_classes:
+    - name: "Patient"
+      properties:
+        - "patient_id"
+        - "name"
+        - "date_of_birth"
+        - "gender"
+        - "blood_type"
+        - "allergies"
+        - "medical_history"
+        - "emergency_contact"
+      description: "Entité représentant un patient"
+      uri: "http://example.com/ontology#Patient"
+
+    - name: "Doctor"
+      properties:
+        - "doctor_id"
+        - "name"
+        - "specialty"
+        - "license_number"
+        - "availability"
+        - "experience_years"
+      description: "Entité représentant un médecin"
+      uri: "http://example.com/ontology#Doctor"
+
+    - name: "Appointment"
+      properties:
+        - "appointment_id"
+        - "patient_id"
+        - "doctor_id"
+        - "date"
+        - "time"
+        - "type"
+        - "status"
+        - "notes"
+      description: "Entité représentant un rendez-vous"
+      uri: "http://example.com/ontology#Appointment"
+
+    - name: "MedicalRecord"
+      properties:
+        - "record_id"
+        - "patient_id"
+        - "diagnosis"
+        - "treatment"
+        - "prescriptions"
+        - "test_results"
+        - "created_date"
+        - "updated_date"
+      description: "Entité représentant un dossier médical"
+      uri: "http://example.com/ontology#MedicalRecord"
+
+    - name: "Medication"
+      properties:
+        - "medication_id"
+        - "name"
+        - "dosage"
+        - "frequency"
+        - "duration"
+        - "side_effects"
+        - "interactions"
+      description: "Entité représentant un médicament"
+      uri: "http://example.com/ontology#Medication"
+
+    - name: "TestResult"
+      properties:
+        - "test_id"
+        - "patient_id"
+        - "test_type"
+        - "result_value"
+        - "normal_range"
+        - "unit"
+        - "date_taken"
+        - "lab_id"
+      description: "Entité représentant un résultat de test"
+      uri: "http://example.com/ontology#TestResult"
+
+  instances: []
+  business_handlers:
+    - name: "PatientHandler"
+      description: "Gestionnaire pour les patients"
+      methods:
+        - "create_patient"
+        - "update_medical_history"
+        - "get_patient_info"
+    - name: "AppointmentHandler"
+      description: "Gestionnaire pour les rendez-vous"
+      methods:
+        - "schedule_appointment"
+        - "check_availability"
+        - "cancel_appointment"
+
+vector_store:
+  collections:
+    - name: "patients"
+      description: "Collection des patients"
+      vector_count: 0
+    - name: "appointments"
+      description: "Collection des rendez-vous"
+      vector_count: 0
+    - name: "medical_records"
+      description: "Collection des dossiers médicaux"
+      vector_count: 0
+    - name: "medications"
+      description: "Collection des médicaments"
+      vector_count: 0
+  statistics:
+    total_vectors: 0
+    collections_count: 4
+
+llm_config:
+  model: "gpt-3.5-turbo"
+  temperature: 0.5
+  max_tokens: 1200
+  api_key_configured: true
+  system_prompt: "Vous êtes un assistant médical spécialisé. Vous pouvez gérer les rendez-vous, les dossiers patients et les prescriptions tout en respectant la confidentialité médicale."
+
+tools_config:
+  appointment_api:
+    enabled: true
+    endpoint: "http://localhost:5001/api/tools/appointment"
+    timeout: 30
+    retry_count: 3
+  medical_records_api:
+    enabled: true
+    endpoint: "http://localhost:5001/api/tools/medical_records"
+    timeout: 45
+    retry_count: 3
+  prescription_api:
+    enabled: true
+    endpoint: "http://localhost:5001/api/tools/prescription"
+    timeout: 60
+    retry_count: 3
+  notification_api:
+    enabled: true
+    endpoint: "http://localhost:5001/api/tools/notification"
+    timeout: 30
+    retry_count: 2
+
+agent_config:
+  intent_patterns:
+    prendre_rdv:
+      - "prendre rendez-vous"
+      - "rdv"
+      - "consultation"
+      - "visite"
+      - "appointment"
+    consulter:
+      - "consulter"
+      - "voir"
+      - "dossier"
+      - "historique"
+      - "résultats"
+    prescrire:
+      - "prescrire"
+      - "médicament"
+      - "ordonnance"
+      - "traitement"
+    urgence:
+      - "urgence"
+      - "urgent"
+      - "critique"
+      - "grave"
+  fallback_enabled: true
+  confidence_threshold: 0.8
+  max_actions_per_query: 3
+  response_timeout: 20
+
+metadata:
+  exported_by: "ConfigurationManager"
+  system_version: "1.0.0"
+  business_domain: "healthcare"
+  tags:
+    - "healthcare"
+    - "médical"
+    - "patients"
+    - "rendez-vous"
+  notes: "Configuration pour système de gestion médicale avec respect de la confidentialité" 

@@ -1,0 +1,11 @@
+# Configuration pour l'API OpenAI
+# Copiez ce contenu dans un fichier .env et ajoutez votre clé API
+
+# Clé API OpenAI (obtenez-la sur https://platform.openai.com/api-keys)
+OPENAI_API_KEY=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
+
+# Modèle à utiliser (optionnel, par défaut: gpt-3.5-turbo)
+# OPENAI_MODEL=gpt-4
+
+# Modèle d'embedding à utiliser (optionnel, par défaut: text-embedding-3-small)
+# OPENAI_EMBEDDING_MODEL=text-embedding-3-small 
