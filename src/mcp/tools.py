@@ -202,14 +202,14 @@ def get_product_details_tool(product_id: str,
         return None
 
 
-def get_client_details_tool(client_id: str, 
-                          knowledge_base) -> Optional[Dict]:
+def get_client_details_tool(client_id: str, knowledge_base, **kwargs) -> Optional[Dict]:
     """
     Récupère les détails d'un client
     
     Args:
         client_id: Identifiant du client
         knowledge_base: Instance de KnowledgeBase
+        **kwargs: Paramètres optionnels (ignorés pour cette fonction)
     
     Returns:
         Optional[Dict]: Détails du client ou None si non trouvé
@@ -225,17 +225,18 @@ def get_client_details_tool(client_id: str,
         return client_details
         
     except Exception as e:
-        print(f"❌ Erreur lors de la récupération des détails: {e}")
+        print(f"❌ Erreur lors de la récupération des détails client: {e}")
         return None
 
 
-def validate_order_tool(order_id: str, knowledge_base) -> Tuple[bool, str]:
+def validate_order_tool(order_id: str, knowledge_base, **kwargs) -> Tuple[bool, str]:
     """
-    Valide une commande (vérifie le stock et traite le paiement)
+    Valide une commande selon les règles métier
     
     Args:
         order_id: Identifiant de la commande
         knowledge_base: Instance de KnowledgeBase
+        **kwargs: Paramètres optionnels (ignorés pour cette fonction)
     
     Returns:
         Tuple[bool, str]: (succès, message)
@@ -247,26 +248,45 @@ def validate_order_tool(order_id: str, knowledge_base) -> Tuple[bool, str]:
         if not order_details:
             return False, f"Commande {order_id} non trouvée"
         
+        # Récupère les détails du client
+        client_id = order_details.get('hasClient', '')
+        client_details = knowledge_base.get_client_details(client_id)
+        
+        # Récupère le montant
+        amount = float(order_details.get('hasAmount', 0))
+        
+        # Règles de validation simples
+        validation_rules = []
+        
+        # Règle 1: Montant minimum
+        if amount < 10:
+            validation_rules.append("Montant minimum non atteint (10€)")
+        
+        # Règle 2: Client valide
+        if not client_details:
+            validation_rules.append("Client non trouvé")
+        
+        # Règle 3: Statut initial
         current_status = order_details.get('hasStatus', '')
+        if current_status not in ['en_attente', 'nouvelle']:
+            validation_rules.append(f"Statut invalide: {current_status}")
         
-        if current_status != "en_attente":
-            return False, f"Commande {order_id} déjà traitée (statut: {current_status})"
-        
-        # Pour ce PoC, on simule une validation simple
-        # Dans un vrai système, on récupérerait les articles de la commande
-        # et on vérifierait le stock pour chacun
-        
-        # Simule la vérification du stock (succès dans 90% des cas)
-        if random.random() < 0.9:
+        # Si toutes les règles sont respectées
+        if not validation_rules:
             # Met à jour le statut
             knowledge_base.update_order_status(order_id, "validee")
-            print(f"✅ Commande {order_id} validée")
+            
+            print(f"✅ Commande {order_id} validée avec succès")
+            print(f"   Montant: {amount:.2f}€")
+            print(f"   Client: {client_id}")
+            
             return True, "Commande validée avec succès"
         else:
-            # Simule un échec de stock
-            knowledge_base.update_order_status(order_id, "annulee_stock_insuffisant")
-            print(f"❌ Commande {order_id} annulée - stock insuffisant")
-            return False, "Commande annulée - stock insuffisant"
+            print(f"❌ Commande {order_id} rejetée:")
+            for rule in validation_rules:
+                print(f"   - {rule}")
+            
+            return False, f"Commande rejetée: {'; '.join(validation_rules)}"
             
     except Exception as e:
         print(f"❌ Erreur lors de la validation: {e}")
@@ -321,53 +341,53 @@ def recommend_products_tool(query_text: str, vector_store,
         return []
 
 
-def get_order_history_tool(client_id: str, knowledge_base) -> List[Dict]:
+def get_order_history_tool(client_id: str, knowledge_base, **kwargs) -> List[Dict]:
     """
     Récupère l'historique des commandes d'un client
     
     Args:
         client_id: Identifiant du client
         knowledge_base: Instance de KnowledgeBase
+        **kwargs: Paramètres optionnels (ignorés pour cette fonction)
     
     Returns:
-        List[Dict]: Liste des commandes du client
+        List[Dict]: Historique des commandes
     """
     try:
-        # Requête SPARQL pour récupérer les commandes du client
-        sparql_query = f"""
-        PREFIX ex: <http://example.org/ontology/>
-        PREFIX client: <http://example.org/client/>
-        PREFIX order: <http://example.org/order/>
+        # Récupère toutes les commandes
+        all_orders = []
+        order_uris = knowledge_base.get_instances_of_class(
+            "http://example.org/ontology/Order"
+        )
         
-        SELECT ?order ?amount ?status
-        WHERE {{
-            ?order a ex:Order .
-            ?order ex:hasClient client:{client_id} .
-            ?order ex:hasAmount ?amount .
-            ?order ex:hasStatus ?status .
-        }}
-        ORDER BY ?order
-        """
-        
-        results = knowledge_base.query_graph(sparql_query)
-        
-        orders = []
-        for result in results:
-            order_uri = result['order']
-            order_id = order_uri.split('/')[-1]
+        for order_uri in order_uris:
+            order_id = str(order_uri).split('/')[-1]
+            order_details = knowledge_base.get_order_details(order_id)
             
-            orders.append({
-                'order_id': order_id,
-                'amount': result['amount'],
-                'status': result['status']
-            })
+            if order_details and order_details.get('hasClient') == client_id:
+                all_orders.append({
+                    'order_id': order_id,
+                    'amount': order_details.get('hasAmount', 0),
+                    'status': order_details.get('hasStatus', 'inconnu'),
+                    'date': order_details.get('hasDate', 'N/A')
+                })
         
-        if orders:
-            print(f"📋 Historique des commandes pour le client {client_id}:")
-            for order in orders:
-                print(f"   {order['order_id']}: {order['amount']}€ - {order['status']}")
+        # Trie par date (plus récent en premier)
+        all_orders.sort(key=lambda x: x['date'], reverse=True)
         
-        return orders
+        print(f"📋 Historique des commandes pour le client {client_id}:")
+        print(f"   Nombre de commandes: {len(all_orders)}")
+        
+        total_amount = sum(order['amount'] for order in all_orders)
+        print(f"   Montant total: {total_amount:.2f}€")
+        
+        for order in all_orders[:5]:  # Affiche les 5 dernières
+            print(f"   - {order['order_id']}: {order['amount']}€ ({order['status']})")
+        
+        if len(all_orders) > 5:
+            print(f"   ... et {len(all_orders) - 5} autres commandes")
+        
+        return all_orders
         
     except Exception as e:
         print(f"❌ Erreur lors de la récupération de l'historique: {e}")
@@ -415,30 +435,24 @@ def add_client_tool(name: str, email: str, knowledge_base) -> Tuple[bool, str]:
         return False, f"Erreur lors de l'ajout du client: {e}"
 
 
-def list_clients_tool(knowledge_base) -> List[Dict]:
+def list_clients_tool(knowledge_base, **kwargs) -> List[Dict]:
     """
     Liste tous les clients dans la base de connaissances
     
     Args:
         knowledge_base: Instance de KnowledgeBase
+        **kwargs: Paramètres optionnels (ignorés pour cette fonction)
     
     Returns:
         List[Dict]: Liste des clients avec leurs détails
     """
     try:
-        clients = []
-        client_uris = knowledge_base.get_instances_of_class(
-            "http://example.org/ontology/Client"
-        )
-        
-        for client_uri in client_uris:
-            client_details = knowledge_base.get_client_details(client_uri)
-            if client_details:
-                clients.append(client_details)
+        # Utilise la méthode get_clients de la base de connaissances
+        clients = knowledge_base.get_clients()
         
         print(f"📋 Liste des clients ({len(clients)} clients):")
         for client in clients:
-            print(f"   - {client.get('hasName', 'N/A')} ({client.get('hasEmail', 'N/A')})")
+            print(f"   - {client.get('name', 'N/A')} ({client.get('email', 'N/A')}) - ID: {client.get('id', 'N/A')}")
         
         return clients
         
@@ -449,12 +463,13 @@ def list_clients_tool(knowledge_base) -> List[Dict]:
 
 # ===== OUTILS D'INTROSPECTION ET RÉFLEXIVITÉ =====
 
-def introspect_ontology_tool(knowledge_base) -> Dict:
+def introspect_ontology_tool(knowledge_base, **kwargs) -> Dict:
     """
     Introspection complète de l'ontologie
     
     Args:
         knowledge_base: Instance de KnowledgeBase
+        **kwargs: Paramètres optionnels (ignorés pour cette fonction)
     
     Returns:
         Dict: Structure complète de l'ontologie
@@ -565,12 +580,13 @@ def query_ontology_tool(query_type: str, knowledge_base, **kwargs) -> List[Dict]
         return []
 
 
-def get_all_orders_tool(knowledge_base) -> List[Dict]:
+def get_all_orders_tool(knowledge_base, **kwargs) -> List[Dict]:
     """
     Récupère toutes les commandes dans la base de connaissances
     
     Args:
         knowledge_base: Instance de KnowledgeBase
+        **kwargs: Paramètres optionnels (ignorés pour cette fonction)
     
     Returns:
         List[Dict]: Liste des commandes avec leurs détails

@@ -197,6 +197,10 @@ class KnowledgeBase:
     
     def add_client(self, client_id: str, name: str, email: str) -> str:
         """Ajoute un nouveau client"""
+        # Vérifie si la classe Client existe, sinon la crée
+        if not self._class_exists(self.ns['ex'].Client):
+            self._create_client_class()
+        
         client_uri = URIRef(f"{self.ns['client']}{client_id}")
         
         self.graph.add((client_uri, RDF.type, self.ns['ex'].Client))
@@ -204,6 +208,36 @@ class KnowledgeBase:
         self.graph.add((client_uri, self.ns['ex'].hasEmail, Literal(email)))
         
         return client_id
+    
+    def _class_exists(self, class_uri) -> bool:
+        """Vérifie si une classe existe dans le graphe"""
+        return (class_uri, RDF.type, OWL.Class) in self.graph
+    
+    def _create_client_class(self):
+        """Crée la classe Client et ses propriétés"""
+        ex = self.ns['ex']
+        
+        # Crée la classe Client
+        self.graph.add((ex.Client, RDF.type, OWL.Class))
+        self.graph.add((ex.Client, RDFS.label, Literal("Client")))
+        
+        # Crée les propriétés hasName et hasEmail si elles n'existent pas
+        if not self._property_exists(ex.hasName):
+            self.graph.add((ex.hasName, RDF.type, OWL.DatatypeProperty))
+            self.graph.add((ex.hasName, RDFS.label, Literal("hasName")))
+            self.graph.add((ex.hasName, RDFS.range, XSD.string))
+        
+        if not self._property_exists(ex.hasEmail):
+            self.graph.add((ex.hasEmail, RDF.type, OWL.DatatypeProperty))
+            self.graph.add((ex.hasEmail, RDFS.label, Literal("hasEmail")))
+            self.graph.add((ex.hasEmail, RDFS.range, XSD.string))
+        
+        print("✅ Classe Client créée automatiquement")
+    
+    def _property_exists(self, property_uri) -> bool:
+        """Vérifie si une propriété existe dans le graphe"""
+        return ((property_uri, RDF.type, OWL.DatatypeProperty) in self.graph or 
+                (property_uri, RDF.type, OWL.ObjectProperty) in self.graph)
     
     def add_product(self, product_id: str, name: str, price: float,
                    stock: int, description: str) -> str:
@@ -339,9 +373,8 @@ class KnowledgeBase:
         """
         try:
             clients = []
-            client_uris = self.get_instances_of_class(
-                "http://example.org/ontology/Client"
-            )
+            # Utilise le namespace correct au lieu de l'URI hardcodée
+            client_uris = self.get_instances_of_class(str(self.ns['ex'].Client))
             
             for client_uri in client_uris:
                 # Extrait l'ID du client depuis l'URI

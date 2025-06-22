@@ -1,74 +1,71 @@
 #!/usr/bin/env python3
 """
-Script de démarrage pour le Frontend React
-Démarre l'interface d'administration en mode développement
+Script de démarrage du frontend React
 """
 
-import os
 import sys
+import os
 import subprocess
+import webbrowser
 import time
 
-def check_node_installed():
-    """Vérifie si Node.js est installé"""
-    try:
-        subprocess.run(['node', '--version'], check=True, capture_output=True)
-        subprocess.run(['npm', '--version'], check=True, capture_output=True)
-        return True
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return False
+# Ajoute le répertoire parent (racine du projet) au path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)  # Remonte d'un niveau
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+def check_node_modules():
+    """Vérifie si node_modules existe"""
+    frontend_dir = os.path.join(project_root, "admin-frontend")
+    node_modules = os.path.join(frontend_dir, "node_modules")
+    return os.path.exists(node_modules)
 
 def install_dependencies():
     """Installe les dépendances npm"""
+    frontend_dir = os.path.join(project_root, "admin-frontend")
     print("📦 Installation des dépendances npm...")
     try:
-        subprocess.run(['npm', 'install'], cwd='admin-frontend', check=True)
-        print("✅ Dépendances npm installées")
+        subprocess.run(["npm", "install"], cwd=frontend_dir, check=True)
+        print("✅ Dépendances installées")
         return True
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Erreur lors de l'installation: {e}")
+    except subprocess.CalledProcessError:
+        print("❌ Erreur lors de l'installation des dépendances")
         return False
 
-def start_frontend():
-    """Démarre le serveur de développement React"""
-    print("🚀 Démarrage du Frontend React...")
-    print("📍 URL: http://localhost:5173")
-    print("🔌 Interface d'administration prête...")
-    print("⏹️  Appuyez sur Ctrl+C pour arrêter le serveur")
-    
-    try:
-        subprocess.run(['npm', 'run', 'dev'], cwd='admin-frontend', check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Erreur lors du démarrage: {e}")
-        return False
-    except KeyboardInterrupt:
-        print("\n🛑 Serveur frontend arrêté")
-        return True
-
-def main():
-    """Fonction principale"""
-    print("🎨 Démarrage de l'Interface d'Administration")
+def start_dev_server():
+    """Démarre le serveur de développement"""
+    frontend_dir = os.path.join(project_root, "admin-frontend")
+    print("🚀 Démarrage du serveur de développement...")
+    print("📍 URL: http://localhost:3000")
     print("=" * 50)
     
-    # Vérifier Node.js
-    if not check_node_installed():
-        print("❌ Node.js et npm ne sont pas installés")
-        print("💡 Installez Node.js depuis: https://nodejs.org/")
-        sys.exit(1)
+    try:
+        # Ouvre le navigateur après un délai
+        def open_browser():
+            time.sleep(3)
+            webbrowser.open("http://localhost:3000")
+        
+        import threading
+        browser_thread = threading.Thread(target=open_browser)
+        browser_thread.daemon = True
+        browser_thread.start()
+        
+        # Démarre le serveur de développement
+        subprocess.run(["npm", "start"], cwd=frontend_dir)
+        
+    except KeyboardInterrupt:
+        print("\n🛑 Serveur frontend arrêté par l'utilisateur")
+    except Exception as e:
+        print(f"❌ Erreur lors du démarrage du frontend: {e}")
+
+if __name__ == "__main__":
+    print("🎨 Démarrage du frontend React...")
     
-    # Vérifier que le dossier admin-frontend existe
-    if not os.path.exists('admin-frontend'):
-        print("❌ Dossier admin-frontend non trouvé")
-        print("💡 Assurez-vous d'être dans le répertoire racine du projet")
-        sys.exit(1)
-    
-    # Installer les dépendances si nécessaire
-    if not os.path.exists('admin-frontend/node_modules'):
+    # Vérifie et installe les dépendances si nécessaire
+    if not check_node_modules():
         if not install_dependencies():
             sys.exit(1)
     
-    # Démarrer le frontend
-    start_frontend()
-
-if __name__ == "__main__":
-    main() 
+    # Démarre le serveur de développement
+    start_dev_server() 

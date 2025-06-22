@@ -7,9 +7,9 @@ import asyncio
 import sys
 import os
 
-# Ajoute le répertoire src au path
+# Ajoute le répertoire parent (racine du projet) au path
 current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = current_dir
+project_root = os.path.dirname(current_dir)  # Remonte d'un niveau
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
