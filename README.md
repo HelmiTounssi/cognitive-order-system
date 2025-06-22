@@ -1,6 +1,6 @@
-# 🧠 Système de Gestion Cognitif de Commande
+# 🧠 Système Cognitif Générique & Réflexif
 
-Un système intelligent de gestion de commandes utilisant l'inférence sémantique, la recherche vectorielle et le protocole MCP (Model Context Protocol).
+Un système intelligent de gestion cognitive utilisant l'inférence sémantique, la recherche vectorielle et le protocole MCP (Model Context Protocol).
 
 ## 🚀 Fonctionnalités
 
@@ -74,17 +74,17 @@ OPENAI_API_KEY=votre_clé_api_openai
 
 ### 1. Démarrer le serveur MCP
 ```bash
-python start_mcp_server.py
+python scripts/start_mcp_server.py
 ```
 
 ### 2. Démarrer l'interface admin
 ```bash
-python start_admin_api.py
+python scripts/start_admin_api.py
 ```
 
 ### 3. Démarrer le frontend
 ```bash
-python start_frontend.py
+python scripts/start_frontend.py
 ```
 
 ### 4. Accéder à l'interface
@@ -126,10 +126,10 @@ Le serveur MCP expose les outils suivants :
 python -m pytest tests/
 
 # Tests d'intégration MCP
-python test_mcp_integration.py
+python tests/test_mcp_integration.py
 
 # Tests complets du système
-python test_system_complete.py
+python tests/test_system_complete.py
 ```
 
 ## 📁 Structure du Projet
@@ -141,16 +141,20 @@ poc2/
 │   ├── rag/               # Système RAG
 │   ├── llm/               # Interfaces LLM
 │   ├── mcp/               # Protocole MCP
+│   │   └── README_MCP.md  # Documentation MCP
 │   ├── api/               # API REST
 │   ├── config/            # Configuration
 │   ├── plugins/           # Plugins
 │   └── utils/             # Utilitaires
 ├── admin-frontend/        # Interface React
-├── tests/                 # Tests unitaires
-├── scripts/               # Scripts utilitaires
+├── tests/                 # Tests unitaires et d'intégration
+├── scripts/               # Scripts de démarrage et utilitaires
 ├── configs/               # Fichiers de configuration
 ├── examples/              # Exemples d'utilisation
-└── docs/                  # Documentation
+├── docs/                  # Documentation
+│   ├── README_DEMARRAGE.md
+│   └── STATUT_FINAL.md
+└── plugins/               # Plugins externes
 ```
 
 ## 🔧 Configuration
@@ -164,6 +168,12 @@ poc2/
 Les configurations sont stockées dans `configs/` :
 - `business_config_*.json` : Configurations métier
 - `ontology_*.yaml` : Définitions d'ontologie
+
+## 📚 Documentation
+
+- **Documentation MCP** : `src/mcp/README_MCP.md`
+- **Guide de démarrage** : `docs/README_DEMARRAGE.md`
+- **Statut du projet** : `docs/STATUT_FINAL.md`
 
 ## 🤝 Contribution
 
