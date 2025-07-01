@@ -39,7 +39,7 @@ src/
 
 ### 1. Cloner le repository
 ```bash
-git clone <votre-repo-url>
+git clone https://github.com/HelmiTounssi/cognitive-order-system
 cd poc2
 ```
 
